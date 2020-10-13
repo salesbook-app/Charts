@@ -169,78 +169,70 @@ open class XAxisRenderer: AxisRendererBase
     }
     
     /// draws the x-labels on the specified y-position
-    @objc open func drawLabels(context: CGContext, pos: CGFloat, anchor: CGPoint)
-    {
-        guard
-            let xAxis = self.axis as? XAxis,
-            let transformer = self.transformer
-            else { return }
-        
-        let paraStyle = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
-        paraStyle.alignment = .center
-        
-        let labelAttrs: [NSAttributedString.Key : Any] = [
-            .font: xAxis.labelFont,
-            .foregroundColor: xAxis.labelTextColor,
-            .paragraphStyle: paraStyle
-        ]
-        let labelRotationAngleRadians = xAxis.labelRotationAngle.DEG2RAD
-        
-        let centeringEnabled = xAxis.isCenterAxisLabelsEnabled
+    @objc open func drawLabels(context: CGContext, pos: CGFloat, anchor: CGPoint) {
+        let labelTextColorList: [UIColor] = [ UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.5), UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0), UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.5)]
+        let labelFonts: [UIFont] = [ UIFont.systemFont(ofSize: 16.0), UIFont.boldSystemFont(ofSize: 16.0), UIFont.systemFont(ofSize: 16.0)]
+        guard let xAxis = self.axis as? XAxis, let transformer = self.transformer else { return }
 
+        let viewPortHandler = self.viewPortHandler
+        #if os(OSX)
+            let paraStyle = NSParagraphStyle.default().mutableCopy() as! NSMutableParagraphStyle
+        #else
+            let paraStyle = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
+        #endif
+        paraStyle.alignment = .center
+
+        let labelRotationAngleRadians = xAxis.labelRotationAngle
+        let centeringEnabled = xAxis.isCenterAxisLabelsEnabled
         let valueToPixelMatrix = transformer.valueToPixelMatrix
-        
         var position = CGPoint(x: 0.0, y: 0.0)
-        
         var labelMaxSize = CGSize()
-        
-        if xAxis.isWordWrapEnabled
-        {
+        if xAxis.isWordWrapEnabled {
             labelMaxSize.width = xAxis.wordWrapWidthPercent * valueToPixelMatrix.a
         }
-        
         let entries = xAxis.entries
-        
-        for i in stride(from: 0, to: entries.count, by: 1)
-        {
-            if centeringEnabled
-            {
-                position.x = CGFloat(xAxis.centeredEntries[i])
+        for i in stride(from: 0, to: entries.count, by: 1) {
+            var labelAttrs = [NSAttributedString.Key : Any]()
+            
+            if (i<labelTextColorList.count) {
+                labelAttrs = [
+                    NSAttributedString.Key.font: labelFonts[i],
+                    NSAttributedString.Key.foregroundColor: labelTextColorList[i],
+                    NSAttributedString.Key.paragraphStyle: paraStyle
+                ]
+            } else {
+                labelAttrs = [
+                    NSAttributedString.Key.font: xAxis.labelFont,
+                    NSAttributedString.Key.foregroundColor: xAxis.labelTextColor,
+                    NSAttributedString.Key.paragraphStyle: paraStyle
+                ]
             }
-            else
-            {
+            
+            if centeringEnabled {
+                position.x = CGFloat(xAxis.centeredEntries[i])
+            } else {
                 position.x = CGFloat(entries[i])
             }
             
             position.y = 0.0
             position = position.applying(valueToPixelMatrix)
-            
-            if viewPortHandler.isInBoundsX(position.x)
-            {
-                let label = xAxis.valueFormatter?.stringForValue(xAxis.entries[i], axis: xAxis) ?? ""
 
+            if viewPortHandler.isInBoundsX(position.x) {
+                let label = xAxis.valueFormatter?.stringForValue(xAxis.entries[i], axis: xAxis) ?? ""
                 let labelns = label as NSString
-                
-                if xAxis.isAvoidFirstLastClippingEnabled
-                {
-                    // avoid clipping of the last
-                    if i == xAxis.entryCount - 1 && xAxis.entryCount > 1
-                    {
+
+                if xAxis.isAvoidFirstLastClippingEnabled {
+                    if i == xAxis.entryCount - 1 && xAxis.entryCount > 1 {
                         let width = labelns.boundingRect(with: labelMaxSize, options: .usesLineFragmentOrigin, attributes: labelAttrs, context: nil).size.width
-                        
-                        if width > viewPortHandler.offsetRight * 2.0
-                            && position.x + width > viewPortHandler.chartWidth
-                        {
+
+                        if width > viewPortHandler.offsetRight * 2.0 && position.x + width > viewPortHandler.chartWidth {
                             position.x -= width / 2.0
                         }
-                    }
-                    else if i == 0
-                    { // avoid clipping of the first
+                    } else if i == 0 {
                         let width = labelns.boundingRect(with: labelMaxSize, options: .usesLineFragmentOrigin, attributes: labelAttrs, context: nil).size.width
                         position.x += width / 2.0
                     }
                 }
-                
                 drawLabel(context: context,
                           formattedLabel: label,
                           x: position.x,
@@ -248,7 +240,8 @@ open class XAxisRenderer: AxisRendererBase
                           attributes: labelAttrs,
                           constrainedToSize: labelMaxSize,
                           anchor: anchor,
-                          angleRadians: labelRotationAngleRadians)
+                          angleRadians: labelRotationAngleRadians
+                )
             }
         }
     }
