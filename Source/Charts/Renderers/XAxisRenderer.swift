@@ -170,7 +170,7 @@ open class XAxisRenderer: AxisRendererBase
     
     /// draws the x-labels on the specified y-position
     @objc open func drawLabels(context: CGContext, pos: CGFloat, anchor: CGPoint) {
-//         let labelTextColorList: [UIColor] = [ UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.5), UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0), UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.5)]
+        let labelTextColorList: [UIColor] = [] //[ UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.5), UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0), UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.5)]
 //         let labelFonts: [UIFont] = [ UIFont.systemFont(ofSize: 16.0), UIFont.boldSystemFont(ofSize: 16.0), UIFont.systemFont(ofSize: 16.0)]
         guard let xAxis = self.axis as? XAxis, let transformer = self.transformer else { return }
 
@@ -202,8 +202,8 @@ open class XAxisRenderer: AxisRendererBase
                 ]
             } else {
                 labelAttrs = [
-                    NSAttributedString.Key.font: xAxis.labelFont,
-                    NSAttributedString.Key.foregroundColor: xAxis.labelTextColor,
+                    NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 16.0),
+                    NSAttributedString.Key.foregroundColor: UIColor.black,
                     NSAttributedString.Key.paragraphStyle: paraStyle
                 ]
             }
